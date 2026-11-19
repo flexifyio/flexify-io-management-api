@@ -1,0 +1,1821 @@
+openapi: 3.1.0
+info:
+  description: REST API for Flexify.IO Management Server
+  title: Flexify.IO Management API
+  version: 2.26.0-SNAPSHOT
+servers:
+- url: https://api.flexify.io
+security:
+- bearerAuth: []
+paths:
+  /impersonate/as/{userId}:
+    post:
+      operationId: impersonate
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticationToken"
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Impersonate a user
+      tags:
+      - User Impersonation
+  /impersonate/codes:
+    get:
+      operationId: getImpersonateCodesList
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                uniqueItems: true
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get impersonation codes of current user
+      tags:
+      - User Impersonation
+    post:
+      operationId: addImpersonateCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddImpersonateCodeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Add impersonation code
+      tags:
+      - User Impersonation
+  /impersonate/codes/{code}:
+    delete:
+      operationId: removeImpersonateCode
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Remove impersonation code
+      tags:
+      - User Impersonation
+  /impersonate/from:
+    get:
+      operationId: getImpersonateFromList
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImpersonateUser"
+                uniqueItems: true
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get users who can impersonate current user
+      tags:
+      - User Impersonation
+    post:
+      operationId: addImpersonateFromUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddImpersonateFromUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Allow a user to impersonate current user
+      tags:
+      - User Impersonation
+  /impersonate/from/{user-id}:
+    delete:
+      operationId: removeImpersonateFromUser
+      parameters:
+      - in: path
+        name: user-id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Stop a user from impersonating current user
+      tags:
+      - User Impersonation
+  /impersonate/to:
+    get:
+      operationId: getImpersonateToList
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImpersonateUser"
+                uniqueItems: true
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get users current user can impersonate
+      tags:
+      - User Impersonation
+  /partner/codes:
+    get:
+      operationId: listSignupCodes
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SignupCode"
+                uniqueItems: true
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get all sign-up codes
+      tags:
+      - Partner Sign-Up Codes
+    post:
+      operationId: createCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupCode"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Create sign-up code
+      tags:
+      - Partner Sign-Up Codes
+  /partner/codes/{code}:
+    delete:
+      operationId: deleteCode
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Delete sign-up code
+      tags:
+      - Partner Sign-Up Codes
+  /partner/organizations:
+    get:
+      operationId: listOrganizations
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Org"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: List partner organizations
+      tags:
+      - Partner Organizations
+  /partner/organizations/{orgId}/limits:
+    get:
+      operationId: getOrgLimits
+      parameters:
+      - in: path
+        name: orgId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserConfig"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get organization limits
+      tags:
+      - Partner Organizations
+  /partner/users:
+    get:
+      description: Gets a list of all users managed by this distributor
+      operationId: getUsers
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserStat"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get all users
+      tags:
+      - Partner Users
+    post:
+      description: Creates a new user associated with this distributor
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResponse"
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Create a user
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}:
+    delete:
+      description: Deletes (marks as deleted) a user with given external ID
+      operationId: deleteUserByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Delete user by external ID
+      tags:
+      - Partner Users
+    get:
+      description: Gets details of a user with given external ID
+      operationId: getUserByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get user details by external ID
+      tags:
+      - Partner Users
+    put:
+      description: Updates profile with a user with given external ID
+      operationId: updateUserByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Update profile by external ID
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}/actions/create-password-reset-token:
+    post:
+      operationId: createPasswordResetTokenByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetToken"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Create password reset token by external ID
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}/actions/send-password-reset-email:
+    post:
+      description: Sends a user with given external ID password recovery email
+      operationId: sendPasswordResetEmailByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set/reset password by external ID
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}/limits:
+    put:
+      operationId: setLimitsByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetLimitsRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set user limits by external ID
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}/roles:
+    put:
+      operationId: setRolesByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetRolesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set user roles by external ID
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}/settings:
+    put:
+      operationId: setSettingsByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserAdminManagedSettings"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set custom admin user settings by partner
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}/state:
+    put:
+      description: Enables or disables a user with given external ID
+      operationId: changeUserStateByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetUserStateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Change user state by external ID
+      tags:
+      - Partner Users
+  /partner/users/external/{externalId}/tokens:
+    post:
+      description: "Creates new API, impersonation or integration token for a user\
+        \ with given external ID"
+      operationId: generateTokenByExternalId
+      parameters:
+      - in: path
+        name: externalId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateTokenRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticationToken"
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Create token by external ID
+      tags:
+      - Partner Users
+  /partner/users/search:
+    get:
+      description: Gets a list of users managed by this distributor
+      operationId: getAllUsersPageable
+      parameters:
+      - description: Search string
+        in: query
+        name: search-string
+        required: false
+        schema:
+          type: string
+          default: ""
+      - in: query
+        name: pageable
+        required: true
+        schema:
+          $ref: "#/components/schemas/OffsetOrPageReq"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageUserStat"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: "Get users with search, sorting and pagination"
+      tags:
+      - Partner Users
+  /partner/users/username/{username}:
+    delete:
+      description: Deletes (marks as deleted) a user with given username
+      operationId: deleteUserByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Delete user by username
+      tags:
+      - Partner Users
+    get:
+      description: Gets details of a user with given username
+      operationId: getUserByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get user details by username
+      tags:
+      - Partner Users
+    put:
+      description: Updates profile with a user with given username
+      operationId: updateUserByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Update profile by username
+      tags:
+      - Partner Users
+  /partner/users/username/{username}/actions/create-password-reset-token:
+    post:
+      operationId: createPasswordResetTokenByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetToken"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Create password reset token by username
+      tags:
+      - Partner Users
+  /partner/users/username/{username}/actions/send-password-reset-email:
+    post:
+      description: Sends a user with given username password recovery email
+      operationId: sendPasswordResetEmailByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set/reset password by username
+      tags:
+      - Partner Users
+  /partner/users/username/{username}/limits:
+    put:
+      operationId: setLimitsByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetLimitsRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set user limits by username
+      tags:
+      - Partner Users
+  /partner/users/username/{username}/roles:
+    put:
+      operationId: setRolesByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetRolesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set user roles by username
+      tags:
+      - Partner Users
+  /partner/users/username/{username}/settings:
+    put:
+      operationId: setSettingsByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserAdminManagedSettings"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set custom admin user settings by partner
+      tags:
+      - Partner Users
+  /partner/users/username/{username}/state:
+    put:
+      description: Enables or disables a user with given username
+      operationId: changeUserStateByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetUserStateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Change user state by username
+      tags:
+      - Partner Users
+  /partner/users/username/{username}/tokens:
+    post:
+      description: "Creates new API, impersonation or integration token for a user\
+        \ with given username"
+      operationId: generateTokenByUsername
+      parameters:
+      - in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateTokenRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticationToken"
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Create token by username
+      tags:
+      - Partner Users
+  /partner/users/{userId}:
+    delete:
+      description: Deletes (marks as deleted) a user with given ID
+      operationId: deleteUser
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Delete user
+      tags:
+      - Partner Users
+    get:
+      description: Gets details of a user with given ID
+      operationId: getUser
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get user details
+      tags:
+      - Partner Users
+    put:
+      description: Updates profile with a user with given ID
+      operationId: updateUser
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Update profile
+      tags:
+      - Partner Users
+  /partner/users/{userId}/actions/create-password-reset-token:
+    post:
+      operationId: createPasswordResetToken
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetToken"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Create password reset token
+      tags:
+      - Partner Users
+  /partner/users/{userId}/actions/send-password-reset-email:
+    post:
+      description: Sends a user with given ID password recovery email
+      operationId: sendPasswordResetEmail
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set/reset password
+      tags:
+      - Partner Users
+  /partner/users/{userId}/limits:
+    put:
+      operationId: setLimits
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetLimitsRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set custom user limits by partner
+      tags:
+      - Partner Users
+  /partner/users/{userId}/roles:
+    put:
+      operationId: setRoles
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetRolesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set user roles
+      tags:
+      - Partner Users
+  /partner/users/{userId}/settings:
+    put:
+      operationId: setSettings
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserAdminManagedSettings"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Set custom admin user settings by partner
+      tags:
+      - Partner Users
+  /partner/users/{userId}/state:
+    put:
+      description: Enables or disables a user with given ID
+      operationId: changeUserState
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetUserStateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Change user state
+      tags:
+      - Partner Users
+  /partner/users/{userId}/tokens:
+    post:
+      description: Creates new API or integration token for a user with given ID
+      operationId: generateToken
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateTokenRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticationToken"
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Create token
+      tags:
+      - Partner Users
+components:
+  schemas:
+    AddImpersonateCodeRequest:
+      type: object
+      properties:
+        code:
+          type: string
+    AddImpersonateFromUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+    AuthenticationToken:
+      type: object
+      description: Information about authentication token
+      properties:
+        comments:
+          type: string
+          description: Comments
+        id:
+          type: integer
+          format: int64
+          description: Unique token ID
+        impersonator:
+          type: string
+          description: Impersonator
+        ip:
+          type: string
+          description: IP address from which token was requested
+        issued:
+          type: string
+          format: date-time
+          description: When the token was issued
+        lastUsed:
+          type: string
+          format: date-time
+          description: When the token was last used
+        token:
+          type: string
+          description: Token string used for Bearer auth
+        tokenType:
+          type: string
+          description: Type of this token
+          enum:
+          - LOGIN
+          - SSO_LOGIN
+          - API
+          - IMPERSONATION
+          - INTEGRATION
+    BillingAccount:
+      type: object
+      description: Billing Account Information
+      properties:
+        adminState:
+          type: string
+          description: System Account state (Updated by Administrator)
+          enum:
+          - ACTIVE
+          - SUSPENDED
+          examples:
+          - ACTIVE
+        aggregateState:
+          type: string
+          description: Aggregated Account state (ACTIVE only if admin state and billing
+            state are ACTIVE)
+          enum:
+          - ACTIVE
+          - SUSPENDED
+          examples:
+          - ACTIVE
+        billingState:
+          type: string
+          description: Billing Account state (Depend on balance and max credit)
+          enum:
+          - ACTIVE
+          - SUSPENDED
+          examples:
+          - ACTIVE
+        billingType:
+          type: string
+          description: Type of billing for this account
+          enum:
+          - INTEGRATED
+          - BILLING_SERVER
+        createdDate:
+          type: string
+          format: date-time
+          description: Created Timestamp
+        distributor:
+          $ref: "#/components/schemas/Distributor"
+          description: Distributor that manages this account
+        id:
+          type: integer
+          format: int64
+          description: Account Id
+        maxCredit:
+          $ref: "#/components/schemas/Money"
+          description: Account Maximum Credit
+        name:
+          type: string
+          description: Account Name
+          examples:
+          - Personal Account
+        priceList:
+          $ref: "#/components/schemas/PriceList"
+          description: Price list (without prices)
+    CreateUserRequest:
+      type: object
+      description: Profile and optional external ID of a user to be created
+      properties:
+        externalId:
+          type: string
+          description: An optional external ID that can be later used to reference
+            this user
+        orgId:
+          type: integer
+          format: int64
+          description: ID of the organization to assign the user to (or default otherwise)
+        priceListId:
+          type: integer
+          format: int64
+          description: ID of the price list to assign to this user (or default otherwise)
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+          description: New user profile data
+    Distributor:
+      type: object
+      description: Distributor or reseller partner
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Id
+        name:
+          type: string
+          description: Name of the distributor
+          examples:
+          - ACME
+        payUrl:
+          type: string
+          description: URL where user should be redirected for payment
+          examples:
+          - https://example.com/pay
+    GenerateTokenRequest:
+      type: object
+      description: Token configuration
+      properties:
+        comments:
+          type: string
+          description: User-defined comments for the token
+        tokenType:
+          type: string
+          description: Type of this token
+          enum:
+          - LOGIN
+          - SSO_LOGIN
+          - API
+          - IMPERSONATION
+          - INTEGRATION
+    IdResponse:
+      type: object
+      description: Created/Updated resource ID
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Resource ID
+    ImpersonateUser:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+    Money:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          description: Amount in that currency (use negative for refunds)
+          examples:
+          - 1.5
+        currencyCode:
+          type: string
+          description: Code of the currency
+          examples:
+          - USD
+    OffsetOrPageReq:
+      type: object
+      description: Parameters of offset or pageable request
+      properties:
+        maxAllowedSize:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int64
+          description: Position of the first migration in the list (or null to start
+            from the beginning)
+          examples:
+          - 0
+        page:
+          type: integer
+          format: int32
+          description: "[Deprecated] Page number"
+          examples:
+          - 0
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        paged:
+          type: boolean
+        size:
+          type: integer
+          format: int32
+          description: "Max number of entries to return (AKA page size), null means\
+            \ use maximum allowed page size"
+          examples:
+          - 100
+        sort:
+          $ref: "#/components/schemas/SortObject"
+          description: Attributes to sort
+        sortDirection:
+          type: string
+          description: Sort Direction
+          enum:
+          - ASC
+          - DESC
+          examples:
+          - ASC
+        unpaged:
+          type: boolean
+    Org:
+      type: object
+      description: Organization visible in management APIs
+      properties:
+        hasAzureManagedIdentityConfig:
+          type: boolean
+          description: True if Azure Managed Identity configuration exists
+          readOnly: true
+        hasDeployConfig:
+          type: boolean
+          description: True if deploy configuration exists
+          readOnly: true
+        hasLinksConfig:
+          type: boolean
+          description: True if links configuration exists
+          readOnly: true
+        hasQueueConfig:
+          type: boolean
+          description: True if queue configuration exists
+          readOnly: true
+        hidden:
+          type: boolean
+          description: True if organization is soft-deleted
+          readOnly: true
+        id:
+          type: integer
+          format: int64
+          description: Internal organization ID
+        name:
+          type: string
+          description: Organization name
+    PageUserStat:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserStat"
+        empty:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+        number:
+          type: integer
+          format: int32
+        numberOfElements:
+          type: integer
+          format: int32
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
+        size:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortObject"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    PageableObject:
+      type: object
+      properties:
+        offset:
+          type: integer
+          format: int64
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        paged:
+          type: boolean
+        sort:
+          $ref: "#/components/schemas/SortObject"
+        unpaged:
+          type: boolean
+    PasswordResetToken:
+      type: object
+      properties:
+        expirationDate:
+          type: string
+          format: date-time
+          readOnly: true
+        token:
+          type: string
+    Permissions:
+      type: object
+      properties:
+        canControlLogLevel:
+          type: boolean
+        canControlReportLevel:
+          type: boolean
+        canManageAccountDeletion:
+          type: boolean
+        canModifyIdentity:
+          type: boolean
+        canSelectEnginesForPipeline:
+          type: boolean
+    PriceList:
+      type: object
+      description: Price list
+      properties:
+        currencyCode:
+          type: string
+          description: Currency of this price list
+        id:
+          type: integer
+          format: int64
+          description: ID of the price list
+        name:
+          type: string
+          description: Name of the price list
+    SetLimitsRequest:
+      type: object
+      properties:
+        limits:
+          $ref: "#/components/schemas/UserConfig"
+    SetRolesRequest:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+            - ROLE_ACTUATOR
+            - ROLE_DISTRIBUTOR
+            - ROLE_PARTNER_ADMIN
+            - ROLE_IMPERSONATOR
+            - ROLE_BILLING
+          uniqueItems: true
+    SetUserStateRequest:
+      type: object
+      properties:
+        newState:
+          type: string
+          enum:
+          - ACTIVE
+          - DISABLED
+          - DELETED
+    SignupCode:
+      type: object
+      properties:
+        code:
+          type: string
+        orgId:
+          type: integer
+          format: int64
+          writeOnly: true
+        priceListId:
+          type: integer
+          format: int64
+          writeOnly: true
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+            - ROLE_ACTUATOR
+            - ROLE_DISTRIBUTOR
+            - ROLE_PARTNER_ADMIN
+            - ROLE_IMPERSONATOR
+            - ROLE_BILLING
+          uniqueItems: true
+        singleUse:
+          type: boolean
+        stat:
+          $ref: "#/components/schemas/SignupCodeStat"
+          readOnly: true
+        useMyBillingAccount:
+          type: boolean
+          writeOnly: true
+    SignupCodeStat:
+      type: object
+      properties:
+        available:
+          type: boolean
+          readOnly: true
+        billingAccount:
+          $ref: "#/components/schemas/BillingAccount"
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        org:
+          $ref: "#/components/schemas/Org"
+          readOnly: true
+        priceList:
+          $ref: "#/components/schemas/PriceList"
+          readOnly: true
+        usedBy:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          uniqueItems: true
+    SortObject:
+      type: object
+      properties:
+        empty:
+          type: boolean
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+    UpdateUserRequest:
+      type: object
+      description: Request payload for updating an existing user
+      properties:
+        orgId:
+          type: integer
+          format: int64
+          description: ID of the organization assigned to the user
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+          description: Updated user profile data
+    User:
+      type: object
+      description: Flexify IO user
+      properties:
+        account:
+          $ref: "#/components/schemas/BillingAccount"
+          description: Billing Account associated with this user
+        actualLimits:
+          $ref: "#/components/schemas/UserConfig"
+          description: Actual limits thar are currently in force
+        actualPermissions:
+          $ref: "#/components/schemas/Permissions"
+          description: Actual permissions of this user
+          readOnly: true
+        adminManagedSettings:
+          $ref: "#/components/schemas/UserAdminManagedSettings"
+          description: User's settings managed by admin
+        billingServerAccountId:
+          type: string
+          description: ID of this user's billing account on an external billing server
+        deleteRequested:
+          type: string
+          format: date-time
+          description: If not null - time when the user requested to delete his or
+            her account
+        externalId:
+          type: string
+          description: "External ID of the user, if specified"
+        googleSub:
+          type: string
+          description: Google subject
+        googleUserName:
+          type: string
+          description: Google user name (email)
+        id:
+          type: integer
+          format: int64
+          description: User ID in the system
+        isServiceAccount:
+          type: boolean
+          description: "Indicates that this the account is not intended for direct\
+            \ sign-in, but it can be used via impersonation"
+        microsoftOid:
+          type: string
+          description: Microsoft oid
+        microsoftUserName:
+          type: string
+          description: Microsoft user name (email)
+        org:
+          $ref: "#/components/schemas/Org"
+          description: Organization owning this user
+        passwordIsEmpty:
+          type: boolean
+          description: Indicates that this user does not have a password
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+          description: User's profile
+        recoveryCodesConfigured:
+          type: boolean
+          description: Indicates that active recovery codes exist for this user
+        registered:
+          type: string
+          format: date-time
+          description: Registration time
+        roles:
+          type: array
+          description: Roles associated with this user
+          items:
+            type: string
+            enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+            - ROLE_ACTUATOR
+            - ROLE_DISTRIBUTOR
+            - ROLE_PARTNER_ADMIN
+            - ROLE_IMPERSONATOR
+            - ROLE_BILLING
+          uniqueItems: true
+        settings:
+          $ref: "#/components/schemas/UserSettings"
+          description: User's settings
+        signUpCode:
+          type: string
+          description: Sign up code that the user used when signing up
+        state:
+          type: string
+          description: State of this user
+          enum:
+          - ACTIVE
+          - DISABLED
+          - DELETED
+          examples:
+          - ACTIVE
+        termsAccepted:
+          type: boolean
+          description: Indicates if user has accepted terms. User must accept terms
+            before using web console if requireLicense is configured for console.
+            Does not restrict API access.
+        totpRequired:
+          type: boolean
+          description: Indicates that password login currently requires a second factor
+        userLimits:
+          $ref: "#/components/schemas/UserConfig"
+          description: Limits defined for this user
+        username:
+          type: string
+          description: "Username, always the same as user's email"
+          examples:
+          - jsmith@example.com
+    UserAdminManagedSettings:
+      type: object
+      description: "User's settings, managed by admin"
+      properties:
+        allowSelectingEnginesLocationForPipelines:
+          type: boolean
+          description: Allow user to select location for engines when creating/editing
+            pipelines
+        migrationLogLevel:
+          type: string
+          description: Override Log level for migrations
+          enum:
+          - ERROR
+          - WARNING
+          - INFO
+          - DEBUG
+          - TRACE
+        migrationReportLevel:
+          type: string
+          description: Override migration report level for migrations
+          enum:
+          - ALL
+          - NOT_SKIPPED
+          - FAILED
+          - NONE
+        pipelineMigrationLogLevel:
+          type: string
+          description: Override log level for pipeline migrations
+          enum:
+          - ERROR
+          - WARNING
+          - INFO
+          - DEBUG
+          - TRACE
+        pipelineMigrationReportLevel:
+          type: string
+          description: Override migration report level for pipeline migrations
+          enum:
+          - ALL
+          - NOT_SKIPPED
+          - FAILED
+          - NONE
+    UserConfig:
+      type: object
+      properties:
+        allowAwsPrivateLinkInterface:
+          type: integer
+          format: int32
+        allowDropboxDestinations:
+          type: integer
+          format: int32
+        allowRemovingConflictingBucketNotificationRules:
+          type: integer
+          format: int32
+        maxActiveMigrations:
+          type: integer
+          format: int32
+        maxAutoDeployEnginesCount:
+          type: integer
+          format: int32
+        maxEndpoints:
+          type: integer
+          format: int32
+        maxEnginesPerPipeline:
+          type: integer
+          format: int32
+        maxMigrationCopyRetries:
+          type: integer
+          format: int32
+        maxMigrationEngines:
+          type: integer
+          format: int32
+        maxMigrationMappings:
+          type: integer
+          format: int32
+        maxMigrationRamMb:
+          type: integer
+          format: int32
+        maxMigrationRetries:
+          type: integer
+          format: int32
+        maxMigrationSlots:
+          type: integer
+          format: int32
+        maxMigrationStreamRamKb:
+          type: integer
+          format: int32
+        maxMigrationStreams:
+          type: integer
+          format: int32
+        maxMigrationsInQueue:
+          type: integer
+          format: int32
+        maxNumberOfPipelines:
+          type: integer
+          format: int32
+        maxPolicyRulesPerVirtualBucket:
+          type: integer
+          format: int32
+        maxStorageAccountsPerEndpoint:
+          type: integer
+          format: int32
+        maxStorages:
+          type: integer
+          format: int32
+        maxStoragesPerVirtualBucket:
+          type: integer
+          format: int32
+        maxVirtualBucketsPerEndpoint:
+          type: integer
+          format: int32
+        skipAutoUndeploy:
+          type: integer
+          format: int32
+        totpRecoveryCodesEnabled:
+          type: integer
+          format: int32
+    UserProfile:
+      type: object
+      description: User's profile
+      properties:
+        city:
+          type: string
+          description: City
+          examples:
+          - Munchkin Village
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        company:
+          type: string
+          description: Company
+          examples:
+          - Wiz
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        country:
+          type: string
+          description: Country
+          examples:
+          - Munchkin Country
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        displayName:
+          type: string
+          description: Display name (usually first and last name)
+          examples:
+          - Scarecrow The Wiz
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        email:
+          type: string
+          description: "Email address, always matches the username"
+          examples:
+          - scarecrow@wiz.oz
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        phone:
+          type: string
+          description: Phone number
+          examples:
+          - "+1234567890"
+          pattern: "^(?:[0-9\\+ ]{1,}\\(?[0-9]{3}\\)?[0-9\\- ]{4,12})?$"
+        streetFirstLine:
+          type: string
+          description: Street address - first line
+          examples:
+          - Deadly Poppy Field
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        streetSecondLine:
+          type: string
+          description: Street address - second line
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        zip:
+          type: string
+          description: Zip code
+          examples:
+          - "17564"
+          pattern: "^(?:[\\p{L}\\p{N}\\s\\-]{3,10})?$"
+    UserSettings:
+      type: object
+      description: User's settings
+      properties:
+        allowPartnerManage:
+          type: boolean
+          description: Indicates that the user allowed his or her partner to impersonate
+            and manage user's account
+        sendNews:
+          type: boolean
+          description: Indicates tha the user agreed to receive news and updates
+        sendNotifications:
+          type: boolean
+          description: Indicates that we should send system notifications to the user
+    UserStat:
+      type: object
+      properties:
+        activeContinuousPipelinesCount:
+          type: integer
+          format: int64
+        activeMigrationsCount:
+          type: integer
+          format: int64
+        activePipelinesCount:
+          type: integer
+          format: int64
+        billingAccountAdminState:
+          type: string
+          enum:
+          - ACTIVE
+          - SUSPENDED
+        billingAccountName:
+          type: string
+        billingAccountState:
+          type: string
+          enum:
+          - ACTIVE
+          - SUSPENDED
+        company:
+          type: string
+        deleteRequested:
+          type: string
+          format: date-time
+        displayName:
+          type: string
+        distributorName:
+          type: string
+        email:
+          type: string
+        enabledEndpointsCount:
+          type: integer
+          format: int64
+        externalId:
+          type: string
+        id:
+          type: integer
+          format: int64
+        orgName:
+          type: string
+        priceListName:
+          type: string
+        registered:
+          type: string
+          format: date-time
+        storageAccountsCount:
+          type: integer
+          format: int64
+        totalEndpointsCount:
+          type: integer
+          format: int64
+        totalMigrationsCount:
+          type: integer
+          format: int64
+        totalPipelinesCount:
+          type: integer
+          format: int64
+        userState:
+          type: string
+          enum:
+          - ACTIVE
+          - DISABLED
+          - DELETED
+  securitySchemes:
+    bearerAuth:
+      description: "API token, sent as `Authorization: Bearer <token>`"
+      scheme: bearer
+      type: http
