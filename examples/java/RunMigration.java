@@ -41,7 +41,6 @@ public class RunMigration {
 
         // Engines
         settings.put("enginesSelectionMethod", "AUTO"); // or SHARED, EXISTING, DEPLOYMENT
-        // GET /cloud-locations/existing returns the locations that have engines
         settings.putNull("enginesLocation"); // or settings.putObject("enginesLocation").put("cloudCode", "AWS").put("region", "us-east-1").put("netConfig", "flexify-direct");
         settings.putNull("maxEngines"); // or a number
         settings.putNull("maxStreams"); // or a number
