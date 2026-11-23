@@ -1,0 +1,1210 @@
+openapi: 3.1.0
+info:
+  description: REST API for Flexify.IO Management Server
+  title: Flexify.IO Management API
+  version: 2.26.0-SNAPSHOT
+servers:
+- url: https://api.flexify.io
+security:
+- bearerAuth: []
+paths:
+  /company:
+    get:
+      operationId: getMyCompany
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get the current company administrator's company
+      tags:
+      - My Company
+  /company/settings:
+    get:
+      operationId: getSettings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanySettings"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: "Get sign-in, MFA, OIDC provider and partner access settings of the\
+        \ current company"
+      tags:
+      - My Company
+    put:
+      operationId: setSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanySettings"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: "Update sign-in, MFA, OIDC provider and partner access settings of\
+        \ the current company"
+      tags:
+      - My Company
+  /company/users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompanyUser"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get users of the current company administrator's company
+      tags:
+      - My Company
+    post:
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCompanyUserRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResponse"
+          description: Created
+        "400":
+          description: Bad Request
+      summary: "Create a user in the company admin's company, organization and existing\
+        \ billing account"
+      tags:
+      - Company Users
+  /company/users/{userId}:
+    delete:
+      operationId: deleteUser
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Mark a company user as deleted
+      tags:
+      - Company Users
+    get:
+      operationId: getUser
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Get a user of the current company
+      tags:
+      - Company Users
+    put:
+      operationId: updateProfile
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCompanyUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: "Update a company user's profile, without changing organization or\
+        \ billing"
+      tags:
+      - Company Users
+  /company/users/{userId}/actions/create-password-reset-token:
+    post:
+      operationId: createPasswordResetToken
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetToken"
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Create a password reset link for a company user
+      tags:
+      - Company Users
+  /company/users/{userId}/actions/send-password-reset-email:
+    post:
+      operationId: sendPasswordResetEmail
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Send a company user a password reset email
+      tags:
+      - Company Users
+  /company/users/{userId}/admin-managed-settings/authentication:
+    put:
+      operationId: setAuthenticationSettings
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserAuthenticationSettings"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Replace company user's authentication and MFA overrides
+      tags:
+      - Company Users
+  /company/users/{userId}/password:
+    put:
+      operationId: setPassword
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetNewPasswordRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Set a company user's password with password strength validation
+      tags:
+      - Company Users
+  /company/users/{userId}/password/actions/remove:
+    post:
+      operationId: removePassword
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Remove a company user's password; configured TOTP must be reset first
+      tags:
+      - Company Users
+  /company/users/{userId}/roles:
+    put:
+      operationId: setRoles
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetRolesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: "Set Company Admin and Impersonator roles, preserving all other roles"
+      tags:
+      - Company Users
+  /company/users/{userId}/sso/{provider}/actions/unlink:
+    post:
+      operationId: unlinkSso
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - in: path
+        name: provider
+        required: true
+        schema:
+          type: string
+          enum:
+          - MICROSOFT
+          - GOOGLE
+          - OIDC
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: "Unlink a company user's account at Microsoft, Google or the company's\
+        \ OIDC provider"
+      tags:
+      - Company Users
+  /company/users/{userId}/state:
+    put:
+      operationId: setState
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetUserStateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Activate or disable a company user
+      tags:
+      - Company Users
+  /company/users/{userId}/two-factor/actions/reset:
+    post:
+      operationId: resetTwoFactor
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+      summary: Reset a company user's TOTP and recovery codes
+      tags:
+      - Company Users
+  /impersonate/as/{userId}:
+    post:
+      operationId: impersonate
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticationToken"
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Impersonate a user
+      tags:
+      - User Impersonation
+components:
+  schemas:
+    AuthenticationToken:
+      type: object
+      description: Information about authentication token
+      properties:
+        comments:
+          type: string
+          description: Comments
+        id:
+          type: integer
+          format: int64
+          description: Unique token ID
+        impersonator:
+          type: string
+          description: Impersonator
+        ip:
+          type: string
+          description: IP address from which token was requested
+        issued:
+          type: string
+          format: date-time
+          description: When the token was issued
+        lastUsed:
+          type: string
+          format: date-time
+          description: When the token was last used
+        token:
+          type: string
+          description: Token string used for Bearer auth
+        tokenType:
+          type: string
+          description: Type of this token
+          enum:
+          - LOGIN
+          - SSO_LOGIN
+          - API
+          - IMPERSONATION
+          - INTEGRATION
+    BillingAccount:
+      type: object
+      description: Billing Account Information
+      properties:
+        adminState:
+          type: string
+          description: System Account state (Updated by Administrator)
+          enum:
+          - ACTIVE
+          - SUSPENDED
+          examples:
+          - ACTIVE
+        aggregateState:
+          type: string
+          description: Aggregated Account state (ACTIVE only if admin state and billing
+            state are ACTIVE)
+          enum:
+          - ACTIVE
+          - SUSPENDED
+          examples:
+          - ACTIVE
+        billingState:
+          type: string
+          description: Billing Account state (Depend on balance and max credit)
+          enum:
+          - ACTIVE
+          - SUSPENDED
+          examples:
+          - ACTIVE
+        billingType:
+          type: string
+          description: Type of billing for this account
+          enum:
+          - INTEGRATED
+          - BILLING_SERVER
+        createdDate:
+          type: string
+          format: date-time
+          description: Created Timestamp
+        distributor:
+          $ref: "#/components/schemas/Distributor"
+          description: Distributor that manages this account
+        id:
+          type: integer
+          format: int64
+          description: Account Id
+        maxCredit:
+          $ref: "#/components/schemas/Money"
+          description: Account Maximum Credit
+        name:
+          type: string
+          description: Account Name
+          examples:
+          - Personal Account
+        priceList:
+          $ref: "#/components/schemas/PriceList"
+          description: Price list (without prices)
+    Company:
+      type: object
+      description: "Company membership, independent of organization and billing account"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Company ID
+        name:
+          type: string
+          description: Company name
+          maxLength: 1024
+          minLength: 0
+        noCompany:
+          type: boolean
+          description: "The system company of users without a real company: always\
+            \ exists, cannot be renamed"
+          readOnly: true
+        partnerAccessEnabled:
+          type: boolean
+          description: "The company lets the partner access its users' accounts (impersonate,\
+            \ issue tokens, change the email), if a user allowed it too; changed in\
+            \ the company settings"
+          readOnly: true
+      required:
+      - name
+    CompanyAuthenticationSettings:
+      type: object
+      description: "Sign-in and MFA settings of the company users; users may have\
+        \ their own overrides, see UserAuthenticationSettings"
+      properties:
+        allowGoogleAuth:
+          type: boolean
+          description: Allow signing up and signing in with Google
+        allowMicrosoftAuth:
+          type: boolean
+          description: Allow signing up and signing in with Microsoft
+        allowOidcAuth:
+          type: boolean
+          description: Allow signing in with the company's OIDC provider
+        allowPasswordAuth:
+          type: boolean
+          description: Allow signing up and signing in with password
+        totpEnforced:
+          type: boolean
+          description: Require users with password auth to configure TOTP
+        totpGracePeriodDays:
+          type: integer
+          format: int32
+          description: "Number of days during which user can skip configuring required\
+            \ TOTP, 0 - required immediately"
+          minimum: 0
+        totpRecoveryCodesEnabled:
+          type: boolean
+          description: Allow issuing and using TOTP recovery codes
+      required:
+      - allowGoogleAuth
+      - allowMicrosoftAuth
+      - allowOidcAuth
+      - allowPasswordAuth
+      - totpEnforced
+      - totpGracePeriodDays
+      - totpRecoveryCodesEnabled
+    CompanyOidcSettings:
+      type: object
+      description: "OIDC provider to sign in company users. Issuer URL, client ID\
+        \ and secret must be set, or all fields empty to remove it"
+      properties:
+        clientId:
+          type: string
+          description: Client ID registered in the provider
+          maxLength: 1024
+          minLength: 0
+        clientSecret:
+          type: string
+          description: "Client secret, never returned. Empty to keep the current one"
+          maxLength: 256
+          minLength: 0
+          writeOnly: true
+        displayName:
+          type: string
+          description: Name of the provider shown to users
+          maxLength: 64
+          minLength: 0
+        issuerUrl:
+          type: string
+          description: "Issuer URL, endpoints are taken from its /.well-known/openid-configuration"
+          maxLength: 1024
+          minLength: 0
+        scopes:
+          type: string
+          description: "Space-separated scopes to request, e.g. \"openid email profile\""
+          maxLength: 1024
+          minLength: 0
+    CompanySettings:
+      type: object
+      description: "Settings of the company: sign-in, MFA, OIDC provider and partner\
+        \ access"
+      properties:
+        authentication:
+          $ref: "#/components/schemas/CompanyAuthenticationSettings"
+          description: Sign-in and MFA settings of the company users
+        oidc:
+          $ref: "#/components/schemas/CompanyOidcSettings"
+          description: OIDC provider to sign in company users. In a response all its
+            fields are empty if it is not configured; in a request null or all fields
+            empty removes it
+        partnerAccessEnabled:
+          type: boolean
+          description: "Allow the partner to manage users of the company; if false,\
+            \ the partner cannot manage them whatever their own consent is"
+      required:
+      - authentication
+      - partnerAccessEnabled
+    CompanyUser:
+      type: object
+      description: User of the company as seen by the company administrator
+      properties:
+        authentication:
+          $ref: "#/components/schemas/UserAuthenticationSettings"
+          description: "User's own sign-in and MFA overrides, null if everything is\
+            \ inherited from the company"
+        displayName:
+          type: string
+          description: Display name
+        email:
+          type: string
+          description: Email
+        id:
+          type: integer
+          format: int64
+          description: User ID
+        roles:
+          type: array
+          description: Roles of the user
+          items:
+            type: string
+            enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+            - ROLE_ACTUATOR
+            - ROLE_DISTRIBUTOR
+            - ROLE_PARTNER_ADMIN
+            - ROLE_COMPANY_ADMIN
+            - ROLE_IMPERSONATOR
+            - ROLE_BILLING
+          uniqueItems: true
+        serviceAccount:
+          type: boolean
+          description: "Service account: has no password and no linked SSO, works\
+            \ only with API tokens"
+        ssoOnly:
+          type: boolean
+          description: The user has no password and signs in only with linked SSO
+        state:
+          type: string
+          description: State of the user
+          enum:
+          - ACTIVE
+          - DISABLED
+          - DELETED
+        totpConfigured:
+          type: boolean
+          description: The user has configured TOTP
+    CreateCompanyUserRequest:
+      type: object
+      description: "Request payload for creating a user by a company admin; organization,\
+        \ billing and company are defined by the company"
+      properties:
+        allowPartnerManage:
+          type: boolean
+          description: "Whether partner administrators may act as the new user (impersonation,\
+            \ tokens). Not set means false: the company admin must allow it explicitly"
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+          description: User profile data
+      required:
+      - profile
+    Distributor:
+      type: object
+      description: Distributor or reseller partner
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Id
+        name:
+          type: string
+          description: Name of the distributor
+          examples:
+          - ACME
+        payUrl:
+          type: string
+          description: URL where user should be redirected for payment
+          examples:
+          - https://example.com/pay
+    IdResponse:
+      type: object
+      description: Created/Updated resource ID
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Resource ID
+    Money:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          description: Amount in that currency (use negative for refunds)
+          examples:
+          - 1.5
+        currencyCode:
+          type: string
+          description: Code of the currency
+          examples:
+          - USD
+    Org:
+      type: object
+      description: Organization visible in management APIs
+      properties:
+        hasAzureManagedIdentityConfig:
+          type: boolean
+          description: True if Azure Managed Identity configuration exists
+          readOnly: true
+        hasDeployConfig:
+          type: boolean
+          description: True if deploy configuration exists
+          readOnly: true
+        hasLinksConfig:
+          type: boolean
+          description: True if links configuration exists
+          readOnly: true
+        hasQueueConfig:
+          type: boolean
+          description: True if queue configuration exists
+          readOnly: true
+        hidden:
+          type: boolean
+          description: True if organization is soft-deleted
+          readOnly: true
+        id:
+          type: integer
+          format: int64
+          description: Internal organization ID
+        name:
+          type: string
+          description: Organization name
+    PasswordResetToken:
+      type: object
+      properties:
+        expirationDate:
+          type: string
+          format: date-time
+          readOnly: true
+        token:
+          type: string
+    Permissions:
+      type: object
+      properties:
+        canControlLogLevel:
+          type: boolean
+        canControlReportLevel:
+          type: boolean
+        canManageAccountDeletion:
+          type: boolean
+        canModifyIdentity:
+          type: boolean
+        canSelectEnginesForPipeline:
+          type: boolean
+    PriceList:
+      type: object
+      description: Price list
+      properties:
+        currencyCode:
+          type: string
+          description: Currency of this price list
+        id:
+          type: integer
+          format: int64
+          description: ID of the price list
+        name:
+          type: string
+          description: Name of the price list
+    SetNewPasswordRequest:
+      type: object
+      properties:
+        newPassword:
+          type: string
+    SetRolesRequest:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+            - ROLE_ACTUATOR
+            - ROLE_DISTRIBUTOR
+            - ROLE_PARTNER_ADMIN
+            - ROLE_COMPANY_ADMIN
+            - ROLE_IMPERSONATOR
+            - ROLE_BILLING
+          uniqueItems: true
+    SetUserStateRequest:
+      type: object
+      properties:
+        newState:
+          type: string
+          enum:
+          - ACTIVE
+          - DISABLED
+          - DELETED
+    UpdateCompanyUserRequest:
+      type: object
+      description: "Request payload for updating a user by a company admin; organization,\
+        \ billing and company cannot be changed here"
+      properties:
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+          description: User profile data
+      required:
+      - profile
+    User:
+      type: object
+      description: Flexify IO user
+      properties:
+        account:
+          $ref: "#/components/schemas/BillingAccount"
+          description: Billing Account associated with this user
+        actualAdminManagedSettings:
+          $ref: "#/components/schemas/UserAdminManagedSettings"
+          description: "Actual settings: authentication/MFA from user then company;\
+            \ operational settings from user then partner then organization"
+        actualLimits:
+          $ref: "#/components/schemas/UserConfig"
+          description: Actual limits thar are currently in force
+        actualPermissions:
+          $ref: "#/components/schemas/Permissions"
+          description: Actual permissions of this user
+          readOnly: true
+        adminManagedSettings:
+          $ref: "#/components/schemas/UserAdminManagedSettings"
+          description: Admin-managed settings defined for this user
+        billingServerAccountId:
+          type: string
+          description: ID of this user's billing account on an external billing server
+        company:
+          $ref: "#/components/schemas/Company"
+          description: "Company membership, independent of organization and billing\
+            \ account"
+        companyAuthenticationSettings:
+          $ref: "#/components/schemas/CompanyAuthenticationSettings"
+          description: Authentication and MFA defaults of the user's company
+        deleteRequested:
+          type: string
+          format: date-time
+          description: If not null - time when the user requested to delete his or
+            her account
+        externalId:
+          type: string
+          description: "External ID of the user, if specified"
+        googleSub:
+          type: string
+          description: Google subject
+        googleUserName:
+          type: string
+          description: Google user name (email)
+        id:
+          type: integer
+          format: int64
+          description: User ID in the system
+        impersonationKind:
+          type: string
+          description: "In /user/current only: who acts as the user, null if the user\
+            \ signed in; otherwise by whose rights the user is impersonated"
+          enum:
+          - ADMIN
+          - COMPANY_ADMIN
+          - USER
+          - PARTNER
+        inheritedAdminManagedSettings:
+          $ref: "#/components/schemas/UserAdminManagedSettings"
+          description: "Inherited defaults: company authentication/MFA and partner/organization\
+            \ operational settings"
+        isServiceAccount:
+          type: boolean
+          description: "Indicates that this the account is not intended for direct\
+            \ sign-in, but it can be used via impersonation"
+        microsoftOid:
+          type: string
+          description: Microsoft oid
+        microsoftUserName:
+          type: string
+          description: Microsoft user name (email)
+        oidcProviderName:
+          type: string
+          description: "Name of OIDC provider of the user's company, null if the company\
+            \ has not configured it"
+        oidcSub:
+          type: string
+          description: Subject at OIDC provider of the user's company
+        oidcUserName:
+          type: string
+          description: User name (email) at OIDC provider of the user's company
+        org:
+          $ref: "#/components/schemas/Org"
+          description: Organization owning this user
+        organizationAdminManagedSettings:
+          $ref: "#/components/schemas/UserOperationalSettings"
+          description: Operational defaults defined by user's organization
+        partnerAdminManagedSettings:
+          $ref: "#/components/schemas/UserOperationalSettings"
+          description: "Operational defaults defined by user's partner, null if the\
+            \ user has no partner"
+        passwordIsEmpty:
+          type: boolean
+          description: Indicates that this user does not have a password
+        pristine:
+          type: boolean
+          description: "Indicates that nobody has used the account yet: the user has\
+            \ never signed in and no user the user allowed has impersonated the user.\
+            \ With unset allowPartnerManage the partner may act as a pristine user\
+            \ only"
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+          description: User's profile
+        recoveryCodesConfigured:
+          type: boolean
+          description: Indicates that active recovery codes exist for this user
+        registered:
+          type: string
+          format: date-time
+          description: Registration time
+        roles:
+          type: array
+          description: Roles associated with this user
+          items:
+            type: string
+            enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+            - ROLE_ACTUATOR
+            - ROLE_DISTRIBUTOR
+            - ROLE_PARTNER_ADMIN
+            - ROLE_COMPANY_ADMIN
+            - ROLE_IMPERSONATOR
+            - ROLE_BILLING
+          uniqueItems: true
+        settings:
+          $ref: "#/components/schemas/UserSettings"
+          description: User's settings
+        signUpCode:
+          type: string
+          description: Sign up code that the user used when signing up
+        state:
+          type: string
+          description: State of this user
+          enum:
+          - ACTIVE
+          - DISABLED
+          - DELETED
+          examples:
+          - ACTIVE
+        termsAccepted:
+          type: boolean
+          description: Indicates if user has accepted terms. User must accept terms
+            before using web console if requireLicense is configured for console.
+            Does not restrict API access.
+        totpConfigured:
+          type: boolean
+          description: "Indicates that the user has configured TOTP, so password sign\
+            \ in requires a TOTP code"
+        totpSetupDeadline:
+          type: string
+          format: date-time
+          description: "Time until which the user can postpone configuring enforced\
+            \ TOTP, null if the user does not have to configure TOTP"
+        totpSetupRequired:
+          type: boolean
+          description: Indicates that the user has to configure TOTP because it is
+            required by admin-managed settings for users with a password
+        userLimits:
+          $ref: "#/components/schemas/UserConfig"
+          description: Limits defined for this user
+        username:
+          type: string
+          description: "Username, always the same as user's email"
+          examples:
+          - jsmith@example.com
+    UserAdminManagedSettings:
+      type: object
+      description: "Null means inherited: authentication/MFA user - company; operational\
+        \ settings user - partner - organization"
+      properties:
+        authentication:
+          $ref: "#/components/schemas/UserAuthenticationSettings"
+          description: "Authentication and MFA settings, inherited from the user's\
+            \ company when unset"
+        operational:
+          $ref: "#/components/schemas/UserOperationalSettings"
+          description: "Operational settings, inherited from the user's partner then\
+            \ organization when unset"
+    UserAuthenticationSettings:
+      type: object
+      description: Authentication and MFA overrides; null fields inherit from the
+        user's company
+      properties:
+        allowGoogleAuth:
+          type: boolean
+          description: Allow signing up and signing in with Google
+        allowMicrosoftAuth:
+          type: boolean
+          description: Allow signing up and signing in with Microsoft
+        allowOidcAuth:
+          type: boolean
+          description: Allow signing in with the company's OIDC provider
+        allowPasswordAuth:
+          type: boolean
+          description: Allow signing up and signing in with password
+        totpEnforced:
+          type: boolean
+          description: Require users with password auth to configure TOTP
+        totpGracePeriodDays:
+          type: integer
+          format: int32
+          description: "Number of days during which user can skip configuring required\
+            \ TOTP, 0 - required immediately"
+          minimum: 0
+        totpRecoveryCodesEnabled:
+          type: boolean
+          description: Allow issuing and using TOTP recovery codes
+    UserConfig:
+      type: object
+      properties:
+        maxActiveMigrations:
+          type: integer
+          format: int32
+        maxAutoDeployEnginesCount:
+          type: integer
+          format: int32
+        maxEndpoints:
+          type: integer
+          format: int32
+        maxEnginesPerPipeline:
+          type: integer
+          format: int32
+        maxMigrationCopyRetries:
+          type: integer
+          format: int32
+        maxMigrationEngines:
+          type: integer
+          format: int32
+        maxMigrationMappings:
+          type: integer
+          format: int32
+        maxMigrationRamMb:
+          type: integer
+          format: int32
+        maxMigrationRetries:
+          type: integer
+          format: int32
+        maxMigrationSlots:
+          type: integer
+          format: int32
+        maxMigrationStreamRamKb:
+          type: integer
+          format: int32
+        maxMigrationStreams:
+          type: integer
+          format: int32
+        maxMigrationsInQueue:
+          type: integer
+          format: int32
+        maxNumberOfPipelines:
+          type: integer
+          format: int32
+        maxPolicyRulesPerVirtualBucket:
+          type: integer
+          format: int32
+        maxStorageAccountsPerEndpoint:
+          type: integer
+          format: int32
+        maxStorages:
+          type: integer
+          format: int32
+        maxStoragesPerVirtualBucket:
+          type: integer
+          format: int32
+        maxVirtualBucketsPerEndpoint:
+          type: integer
+          format: int32
+    UserOperationalSettings:
+      type: object
+      description: "Operational settings: user - partner - organization; null fields\
+        \ inherit from the next level"
+      properties:
+        allowAwsPrivateLinkInterface:
+          type: boolean
+          description: Allow AWS PrivateLink Interface Endpoint. Cannot be changed
+            by partner
+        allowDropboxDestinations:
+          type: boolean
+          description: Allow migrations to Dropbox. Cannot be changed by partner
+        allowRemovingConflictingBucketNotificationRules:
+          type: boolean
+          description: Allow removing conflicting bucket notification rules when creating/editing
+            continuous pipelines
+        allowSelectingEnginesLocationForPipelines:
+          type: boolean
+          description: Allow user to select location for engines when creating/editing
+            pipelines
+        migrationLogLevel:
+          type: string
+          description: Log level for migrations. Null on organization level to use
+            the level from engine configuration
+          enum:
+          - ERROR
+          - WARNING
+          - INFO
+          - DEBUG
+          - TRACE
+        migrationReportLevel:
+          type: string
+          description: Migration report level for migrations. Null on organization
+            level to use the level from engine configuration
+          enum:
+          - ALL
+          - NOT_SKIPPED
+          - FAILED
+          - NONE
+        pipelineMigrationLogLevel:
+          type: string
+          description: Log level for pipeline migrations. Null on organization level
+            to use the level from engine configuration
+          enum:
+          - ERROR
+          - WARNING
+          - INFO
+          - DEBUG
+          - TRACE
+        pipelineMigrationReportLevel:
+          type: string
+          description: Migration report level for pipeline migrations. Null on organization
+            level to use the level from engine configuration
+          enum:
+          - ALL
+          - NOT_SKIPPED
+          - FAILED
+          - NONE
+        skipAutoUndeploy:
+          type: boolean
+          description: Skip auto undeploy of engines (only for debug). Cannot be changed
+            by partner
+    UserProfile:
+      type: object
+      description: User's profile
+      properties:
+        city:
+          type: string
+          description: City
+          examples:
+          - Munchkin Village
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        company:
+          type: string
+          description: Company
+          examples:
+          - Wiz
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        country:
+          type: string
+          description: Country
+          examples:
+          - Munchkin Country
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        displayName:
+          type: string
+          description: Display name (usually first and last name)
+          examples:
+          - Scarecrow The Wiz
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        email:
+          type: string
+          description: "Email address, always matches the username"
+          examples:
+          - scarecrow@wiz.oz
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        phone:
+          type: string
+          description: Phone number
+          examples:
+          - "+1234567890"
+          pattern: "^(?:[0-9\\+ ]{1,}\\(?[0-9]{3}\\)?[0-9\\- ]{4,12})?$"
+        streetFirstLine:
+          type: string
+          description: Street address - first line
+          examples:
+          - Deadly Poppy Field
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        streetSecondLine:
+          type: string
+          description: Street address - second line
+          pattern: "^[\\p{L}\\p{N}\\s\\-.',&()#\\/\\[\\]@+_]*$"
+        zip:
+          type: string
+          description: Zip code
+          examples:
+          - "17564"
+          pattern: "^(?:[\\p{L}\\p{N}\\s\\-]{3,10})?$"
+    UserSettings:
+      type: object
+      description: User's settings
+      properties:
+        allowPartnerManage:
+          type: boolean
+          description: Indicates that the user allowed his or her partner to impersonate
+            and manage user's account. Null when not decided yet; null in an update
+            keeps the current value
+        sendNews:
+          type: boolean
+          description: Indicates tha the user agreed to receive news and updates
+        sendNotifications:
+          type: boolean
+          description: Indicates that we should send system notifications to the user
+  securitySchemes:
+    bearerAuth:
+      description: "API token, sent as `Authorization: Bearer <token>`"
+      scheme: bearer
+      type: http

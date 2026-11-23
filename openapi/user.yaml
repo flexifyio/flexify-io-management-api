@@ -1765,6 +1765,69 @@ components:
           description: Cloud region
           examples:
           - us-east-1
+    Company:
+      type: object
+      description: "Company membership, independent of organization and billing account"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Company ID
+        name:
+          type: string
+          description: Company name
+          maxLength: 1024
+          minLength: 0
+        noCompany:
+          type: boolean
+          description: "The system company of users without a real company: always\
+            \ exists, cannot be renamed"
+          readOnly: true
+        partnerAccessEnabled:
+          type: boolean
+          description: "The company lets the partner access its users' accounts (impersonate,\
+            \ issue tokens, change the email), if a user allowed it too; changed in\
+            \ the company settings"
+          readOnly: true
+      required:
+      - name
+    CompanyAuthenticationSettings:
+      type: object
+      description: "Sign-in and MFA settings of the company users; users may have\
+        \ their own overrides, see UserAuthenticationSettings"
+      properties:
+        allowGoogleAuth:
+          type: boolean
+          description: Allow signing up and signing in with Google
+        allowMicrosoftAuth:
+          type: boolean
+          description: Allow signing up and signing in with Microsoft
+        allowOidcAuth:
+          type: boolean
+          description: Allow signing in with the company's OIDC provider
+        allowPasswordAuth:
+          type: boolean
+          description: Allow signing up and signing in with password
+        totpEnforced:
+          type: boolean
+          description: Require users with password auth to configure TOTP
+        totpGracePeriodDays:
+          type: integer
+          format: int32
+          description: "Number of days during which user can skip configuring required\
+            \ TOTP, 0 - required immediately"
+          minimum: 0
+        totpRecoveryCodesEnabled:
+          type: boolean
+          description: Allow issuing and using TOTP recovery codes
+      required:
+      - allowGoogleAuth
+      - allowMicrosoftAuth
+      - allowOidcAuth
+      - allowPasswordAuth
+      - totpEnforced
+      - totpGracePeriodDays
+      - totpRecoveryCodesEnabled
     CostDetails:
       type: object
       description: Cost Details
@@ -2115,7 +2178,6 @@ components:
           type: string
           enum:
           - MICROSOFT
-          - GOOGLE
           - DROPBOX
           - DROPBOX_TEAM
       required:
@@ -3464,7 +3526,6 @@ components:
             \ otherwise"
           enum:
           - MICROSOFT
-          - GOOGLE
           - DROPBOX
           - DROPBOX_TEAM
           readOnly: true
@@ -3681,7 +3742,6 @@ components:
             \ otherwise"
           enum:
           - MICROSOFT
-          - GOOGLE
           - DROPBOX
           - DROPBOX_TEAM
           readOnly: true
@@ -3886,7 +3946,6 @@ components:
             type: string
             enum:
             - MICROSOFT
-            - GOOGLE
             - DROPBOX
             - DROPBOX_TEAM
         supportsAwsGlacierApi:
@@ -4313,6 +4372,10 @@ components:
         account:
           $ref: "#/components/schemas/BillingAccount"
           description: Billing Account associated with this user
+        actualAdminManagedSettings:
+          $ref: "#/components/schemas/UserAdminManagedSettings"
+          description: "Actual settings: authentication/MFA from user then company;\
+            \ operational settings from user then partner then organization"
         actualLimits:
           $ref: "#/components/schemas/UserConfig"
           description: Actual limits thar are currently in force
@@ -4322,10 +4385,17 @@ components:
           readOnly: true
         adminManagedSettings:
           $ref: "#/components/schemas/UserAdminManagedSettings"
-          description: User's settings managed by admin
+          description: Admin-managed settings defined for this user
         billingServerAccountId:
           type: string
           description: ID of this user's billing account on an external billing server
+        company:
+          $ref: "#/components/schemas/Company"
+          description: "Company membership, independent of organization and billing\
+            \ account"
+        companyAuthenticationSettings:
+          $ref: "#/components/schemas/CompanyAuthenticationSettings"
+          description: Authentication and MFA defaults of the user's company
         deleteRequested:
           type: string
           format: date-time
@@ -4344,6 +4414,19 @@ components:
           type: integer
           format: int64
           description: User ID in the system
+        impersonationKind:
+          type: string
+          description: "In /user/current only: who acts as the user, null if the user\
+            \ signed in; otherwise by whose rights the user is impersonated"
+          enum:
+          - ADMIN
+          - COMPANY_ADMIN
+          - USER
+          - PARTNER
+        inheritedAdminManagedSettings:
+          $ref: "#/components/schemas/UserAdminManagedSettings"
+          description: "Inherited defaults: company authentication/MFA and partner/organization\
+            \ operational settings"
         isServiceAccount:
           type: boolean
           description: "Indicates that this the account is not intended for direct\
@@ -4354,12 +4437,35 @@ components:
         microsoftUserName:
           type: string
           description: Microsoft user name (email)
+        oidcProviderName:
+          type: string
+          description: "Name of OIDC provider of the user's company, null if the company\
+            \ has not configured it"
+        oidcSub:
+          type: string
+          description: Subject at OIDC provider of the user's company
+        oidcUserName:
+          type: string
+          description: User name (email) at OIDC provider of the user's company
         org:
           $ref: "#/components/schemas/Org"
           description: Organization owning this user
+        organizationAdminManagedSettings:
+          $ref: "#/components/schemas/UserOperationalSettings"
+          description: Operational defaults defined by user's organization
+        partnerAdminManagedSettings:
+          $ref: "#/components/schemas/UserOperationalSettings"
+          description: "Operational defaults defined by user's partner, null if the\
+            \ user has no partner"
         passwordIsEmpty:
           type: boolean
           description: Indicates that this user does not have a password
+        pristine:
+          type: boolean
+          description: "Indicates that nobody has used the account yet: the user has\
+            \ never signed in and no user the user allowed has impersonated the user.\
+            \ With unset allowPartnerManage the partner may act as a pristine user\
+            \ only"
         profile:
           $ref: "#/components/schemas/UserProfile"
           description: User's profile
@@ -4381,6 +4487,7 @@ components:
             - ROLE_ACTUATOR
             - ROLE_DISTRIBUTOR
             - ROLE_PARTNER_ADMIN
+            - ROLE_COMPANY_ADMIN
             - ROLE_IMPERSONATOR
             - ROLE_BILLING
           uniqueItems: true
@@ -4404,9 +4511,19 @@ components:
           description: Indicates if user has accepted terms. User must accept terms
             before using web console if requireLicense is configured for console.
             Does not restrict API access.
-        totpRequired:
+        totpConfigured:
           type: boolean
-          description: Indicates that password login currently requires a second factor
+          description: "Indicates that the user has configured TOTP, so password sign\
+            \ in requires a TOTP code"
+        totpSetupDeadline:
+          type: string
+          format: date-time
+          description: "Time until which the user can postpone configuring enforced\
+            \ TOTP, null if the user does not have to configure TOTP"
+        totpSetupRequired:
+          type: boolean
+          description: Indicates that the user has to configure TOTP because it is
+            required by admin-managed settings for users with a password
         userLimits:
           $ref: "#/components/schemas/UserConfig"
           description: Limits defined for this user
@@ -4417,58 +4534,49 @@ components:
           - jsmith@example.com
     UserAdminManagedSettings:
       type: object
-      description: "User's settings, managed by admin"
+      description: "Null means inherited: authentication/MFA user - company; operational\
+        \ settings user - partner - organization"
       properties:
-        allowSelectingEnginesLocationForPipelines:
+        authentication:
+          $ref: "#/components/schemas/UserAuthenticationSettings"
+          description: "Authentication and MFA settings, inherited from the user's\
+            \ company when unset"
+        operational:
+          $ref: "#/components/schemas/UserOperationalSettings"
+          description: "Operational settings, inherited from the user's partner then\
+            \ organization when unset"
+    UserAuthenticationSettings:
+      type: object
+      description: Authentication and MFA overrides; null fields inherit from the
+        user's company
+      properties:
+        allowGoogleAuth:
           type: boolean
-          description: Allow user to select location for engines when creating/editing
-            pipelines
-        migrationLogLevel:
-          type: string
-          description: Override Log level for migrations
-          enum:
-          - ERROR
-          - WARNING
-          - INFO
-          - DEBUG
-          - TRACE
-        migrationReportLevel:
-          type: string
-          description: Override migration report level for migrations
-          enum:
-          - ALL
-          - NOT_SKIPPED
-          - FAILED
-          - NONE
-        pipelineMigrationLogLevel:
-          type: string
-          description: Override log level for pipeline migrations
-          enum:
-          - ERROR
-          - WARNING
-          - INFO
-          - DEBUG
-          - TRACE
-        pipelineMigrationReportLevel:
-          type: string
-          description: Override migration report level for pipeline migrations
-          enum:
-          - ALL
-          - NOT_SKIPPED
-          - FAILED
-          - NONE
+          description: Allow signing up and signing in with Google
+        allowMicrosoftAuth:
+          type: boolean
+          description: Allow signing up and signing in with Microsoft
+        allowOidcAuth:
+          type: boolean
+          description: Allow signing in with the company's OIDC provider
+        allowPasswordAuth:
+          type: boolean
+          description: Allow signing up and signing in with password
+        totpEnforced:
+          type: boolean
+          description: Require users with password auth to configure TOTP
+        totpGracePeriodDays:
+          type: integer
+          format: int32
+          description: "Number of days during which user can skip configuring required\
+            \ TOTP, 0 - required immediately"
+          minimum: 0
+        totpRecoveryCodesEnabled:
+          type: boolean
+          description: Allow issuing and using TOTP recovery codes
     UserConfig:
       type: object
       properties:
-        allowAwsPrivateLinkInterface:
-          type: integer
-          format: int32
-        allowDropboxDestinations:
-          type: integer
-          format: int32
-        allowRemovingConflictingBucketNotificationRules:
-          type: integer
-          format: int32
         maxActiveMigrations:
           type: integer
           format: int32
@@ -4526,12 +4634,68 @@ components:
         maxVirtualBucketsPerEndpoint:
           type: integer
           format: int32
+    UserOperationalSettings:
+      type: object
+      description: "Operational settings: user - partner - organization; null fields\
+        \ inherit from the next level"
+      properties:
+        allowAwsPrivateLinkInterface:
+          type: boolean
+          description: Allow AWS PrivateLink Interface Endpoint. Cannot be changed
+            by partner
+        allowDropboxDestinations:
+          type: boolean
+          description: Allow migrations to Dropbox. Cannot be changed by partner
+        allowRemovingConflictingBucketNotificationRules:
+          type: boolean
+          description: Allow removing conflicting bucket notification rules when creating/editing
+            continuous pipelines
+        allowSelectingEnginesLocationForPipelines:
+          type: boolean
+          description: Allow user to select location for engines when creating/editing
+            pipelines
+        migrationLogLevel:
+          type: string
+          description: Log level for migrations. Null on organization level to use
+            the level from engine configuration
+          enum:
+          - ERROR
+          - WARNING
+          - INFO
+          - DEBUG
+          - TRACE
+        migrationReportLevel:
+          type: string
+          description: Migration report level for migrations. Null on organization
+            level to use the level from engine configuration
+          enum:
+          - ALL
+          - NOT_SKIPPED
+          - FAILED
+          - NONE
+        pipelineMigrationLogLevel:
+          type: string
+          description: Log level for pipeline migrations. Null on organization level
+            to use the level from engine configuration
+          enum:
+          - ERROR
+          - WARNING
+          - INFO
+          - DEBUG
+          - TRACE
+        pipelineMigrationReportLevel:
+          type: string
+          description: Migration report level for pipeline migrations. Null on organization
+            level to use the level from engine configuration
+          enum:
+          - ALL
+          - NOT_SKIPPED
+          - FAILED
+          - NONE
         skipAutoUndeploy:
-          type: integer
-          format: int32
-        totpRecoveryCodesEnabled:
-          type: integer
-          format: int32
+          type: boolean
+          description: Skip auto undeploy of engines (only for debug). Cannot be changed
+            by partner
     UserProfile:
       type: object
       description: User's profile
@@ -4595,7 +4759,8 @@ components:
         allowPartnerManage:
           type: boolean
           description: Indicates that the user allowed his or her partner to impersonate
-            and manage user's account
+            and manage user's account. Null when not decided yet; null in an update
+            keeps the current value
         sendNews:
           type: boolean
           description: Indicates tha the user agreed to receive news and updates
